@@ -15,23 +15,36 @@ const exampleBlocks = [
 
 export function BibleChain3D() {
   return (
-    <Canvas camera={{ position: [0, 20, 48], fov: 50 }} style={{ background: "#000000" }}>
-      <ambientLight intensity={0.35} />
+    <Canvas 
+      camera={{ position: [0, 20, 48], fov: 50 }} 
+      style={{ background: "#000000" }}
+    >
+      <ambientLight intensity={0.4} />
       <pointLight position={[0, 60, 50]} intensity={1.8} />
 
-      {/* Vertical 3D Glowing Cross in Background */}
-      <group position={[0, 0, -82]} rotation={[0, 0.12, 0]}>
+      {/* Vertical 3D Glowing Cross */}
+      <group position={[0, 0, -78]} rotation={[0, 0.12, 0]}>
         <mesh>
           <boxGeometry args={[5, 145, 5]} />
-          <meshPhongMaterial color="#eeeeee" emissive="#aaaaaa" transparent opacity={0.20} shininess={10} />
+          <meshPhongMaterial 
+            color="#eeeeee" 
+            emissive="#aaaaaa" 
+            transparent 
+            opacity={0.20} 
+          />
         </mesh>
         <mesh position={[0, 28, 0]}>
-          <boxGeometry args={[70, 5, 5]} />
-          <meshPhongMaterial color="#eeeeee" emissive="#aaaaaa" transparent opacity={0.20} shininess={10} />
+          <boxGeometry args={[72, 5, 5]} />
+          <meshPhongMaterial 
+            color="#eeeeee" 
+            emissive="#aaaaaa" 
+            transparent 
+            opacity={0.20} 
+          />
         </mesh>
       </group>
 
-      {/* The Chain of Blocks */}
+      {/* The Chain */}
       {exampleBlocks.map((block, i) => {
         const angle = i * 0.29;
         const radius = 12.8;
@@ -51,8 +64,8 @@ export function BibleChain3D() {
               />
             </mesh>
 
-            {/* Verse Reference on Top of Block */}
-            <mesh position={[x, y + 1.9, z]} rotation={[0, 0, 0]}>
+            {/* Verse text on block */}
+            <mesh position={[x, y + 1.9, z]}>
               <planeGeometry args={[4.8, 1.1]} />
               <meshBasicMaterial color="#111111" />
             </mesh>
