@@ -1,73 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
 
-const versions = ["KJV", "ASV", "WEB"];
+const exampleBlocks = [
+  { id: 1, ref: "Genesis 1:1", version: "KJV", text: "In the beginning God created the heaven and the earth." },
+  { id: 2, ref: "John 3:16", version: "KJV", text: "For God so loved the world, that he gave his only begotten Son." },
+  { id: 3, ref: "Psalm 23:1", version: "KJV", text: "The Lord is my shepherd; I shall not want." },
+  { id: 4, ref: "Romans 8:28", version: "KJV", text: "And we know that all things work together for good..." },
+  { id: 5, ref: "Philippians 4:13", version: "KJV", text: "I can do all things through Christ who strengthens me." },
+  { id: 6, ref: "Matthew 6:33", version: "KJV", text: "Seek ye first the kingdom of God..." },
+];
 
-export default function CreateBlockPanel() {
-  const [selectedVersion, setSelectedVersion] = useState(0);
-  const [previewRef, setPreviewRef] = useState("Genesis 1:1");
-  const [previewText, setPreviewText] = useState("In the beginning God created the heaven and the earth.");
-
-  const generateRandomVerse = () => {
-    const sampleVerses = [
-      { ref: "Genesis 1:1", text: "In the beginning God created the heaven and the earth." },
-      { ref: "John 3:16", text: "For God so loved the world, that he gave his only begotten Son." },
-      { ref: "Psalm 23:1", text: "The Lord is my shepherd; I shall not want." },
-      { ref: "Romans 8:28", text: "And we know that all things work together for good..." },
-      { ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me." },
-    ];
-    const random = sampleVerses[Math.floor(Math.random() * sampleVerses.length)];
-    setPreviewRef(random.ref);
-    setPreviewText(random.text);
-  };
-
+export default function BibleChain3D() {
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Mint New Verse</h2>
-        <p className="text-sm opacity-60 mt-1">Add a unique Bible verse to the eternal chain</p>
-      </div>
+    <Canvas 
+      camera={{ position: [0, 20, 48], fov: 50 }} 
+      style={{ background: "#000000" }}
+    >
+      <ambientLight intensity={0.4} />
+      <pointLight position={[0, 60, 50]} intensity={1.8} />
 
-      <div>
-        <p className="text-xs opacity-60 mb-3">SELECT BIBLE VERSION</p>
-        <div className="flex gap-2">
-          {versions.map((v, index) => (
-            <button
-              key={v}
-              onClick={() => setSelectedVersion(index)}
-              className={`flex-1 py-4 rounded-2xl font-medium transition-all ${
-                selectedVersion === index 
-                  ? "bg-white text-black" 
-                  : "bg-zinc-900 hover:bg-zinc-800"
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Vertical 3D Glowing Cross */}
+      <group position={[0, 0, -78]} rotation={[0, 0.12, 0]}>
+        <mesh>
+          <boxGeometry args={[5, 145, 5]} />
+          <meshPhongMaterial color="#eeeeee" emissive="#aaaaaa" transparent opacity={0.20} />
+        </mesh>
+        <mesh position={[0, 28, 0]}>
+          <boxGeometry args={[72, 5, 5]} />
+          <meshPhongMaterial color="#eeeeee" emissive="#aaaaaa" transparent opacity={0.20} />
+        </mesh>
+      </group>
 
-      <div className="bg-zinc-900 rounded-3xl p-6 min-h-[160px]">
-        <div className="text-xs opacity-60 mb-2">{versions[selectedVersion]}</div>
-        <div className="font-semibold text-lg mb-3">{previewRef}</div>
-        <p className="text-sm leading-relaxed">{previewText}</p>
-      </div>
+      {/* The Chain with Pulsing + Text */}
+      {exampleBlocks.map((block, i) => {
+        const angle = i * 0.29;
+        const radius = 12.8;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius * 0.7;
+        const y = i * 2.4 - (exampleBlocks.length * 2.4) / 2;
 
-      <button 
-        onClick={generateRandomVerse}
-        className="w-full py-4 border border-white/30 rounded-2xl hover:bg-white/5 transition-colors"
-      >
-        Generate Random Verse
-      </button>
+        return (
+          <group key={i}>
+            {/* Pulsing Block */}
+            <mesh position={[x, y, z]}>
+              <boxGeometry args={[2.1, 2.1, 2.1]} />
+              <meshPhongMaterial 
+                color="#ffffff" 
+                emissive="#bbbbbb" 
+                shininess={110} 
+              />
+            </mesh>
 
-      <button className="w-full py-7 bg-white text-black font-bold text-xl rounded-3xl hover:scale-[1.02] transition-transform">
-        CONNECT WALLET &amp; CREATE BLOCK
-      </button>
+            {/* Verse Reference on Block */}
+            <mesh position={[x, y + 1.9, z]}>
+              <planeGeometry args={[4.8, 1.1]} />
+              <meshBasicMaterial color="#111111" />
+            </mesh>
+          </group>
+        );
+      })}
 
-      <p className="text-xs text-center opacity-50">
-        100 HOLY tokens will be minted • Small fee added to liquidity pool
-      </p>
-    </div>
+      <OrbitControls enablePan={false} enableZoom={true} enableRotate={true} />
+    </Canvas>
   );
 }
