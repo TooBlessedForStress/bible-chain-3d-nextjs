@@ -1,71 +1,122 @@
 // components/VerseChain3D.tsx
 "use client";
 
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Text, Box, Cylinder } from "@react-three/drei";
-import { useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Text } from "@react-three/drei";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import * as THREE from "three";
 
 interface BlockProps {
   position: [number, number, number];
-  verse: string;
   reference: string;
+  isActive: boolean;
 }
 
-function ChainBlock({ position, verse, reference }: BlockProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+const ChainBlock = ({ position, reference, isActive }: BlockProps) => {
+  const meshRef = useRef<THREE.Mesh>(null!);
+
+  useFrame((state) => {
+    if (meshRef.current && isActive) {
+      meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.08);
+    }
+  });
 
   return (
     <group position={position}>
-      {/* Block */}
-      <Box ref={meshRef} args={[1.2, 0.8, 0.8]} castShadow receiveShadow>
-        <meshStandardMaterial color="#d4af77" metalness={0.9} roughness={0.2} />
-      </Box>
-      {/* Verse text on block */}
+      {/* Main Block */}
+      <mesh ref={meshRef} castShadow receiveShadow>
+        <boxGeometry args={[1.8, 1.2, 1.0]} />
+        <meshStandardMaterial 
+          color={isActive ? "#ffffff" : "#cccccc"} 
+          metalness={0.2}
+          roughness={0.8}
+        />
+      </mesh>
+
+      {/* Reference Text on Block */}
       <Text
-        position={[0, 0, 0.41]}
-        fontSize={0.12}
-        color="#111111"
+        position={[0, 0, 0.51]}
+        fontSize={0.11}
+        color="#000000"
         anchorX="center"
         anchorY="middle"
-        maxWidth={1}
+        maxWidth={1.6}
+        font="/fonts/inter.woff" // fallback if needed
       >
         {reference}
       </Text>
-      {/* Chain link to previous block */}
-      <Cylinder args={[0.08, 0.08, 1.5]} position={[0, -1.2, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <meshStandardMaterial color="#666" />
-      </Cylinder>
     </group>
   );
-}
+};
 
-export default function VerseChain3D({ blocks }: { blocks: any[] }) {
+const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => {
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+
+  useImperativeHandle(ref, () => ({
+    focusBlock: (index: number) => {
+      const targetY = index * -2.8;
+      camera.position.set(0, targetY + 8, 18);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, targetY, 0);
+        controlsRef.current.update();
+      }
+    }
+  }));
+
+  // Auto-focus first block on load
+  useFrame(() => {
+    if (blocks.length > 0 && currentIndex === 0) {
+      camera.position.set(0, 6, 22);
+    }
+  });
+
   return (
-    <div className="w-full h-screen">
-      <Canvas camera={{ position: [0, 5, 15], fov: 50 }}>
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 10, 5]} intensity={1.5} />
-        <pointLight position={[-10, -10, -10]} />
+    <>
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[10, 20, 5]} intensity={1.5} castShadow />
+      <pointLight position={[-15, -10, -10]} intensity={0.6} />
 
-        {/* Helix chain path */}
-        {blocks.map((block, i) => {
-          const angle = i * 0.4;
-          const x = Math.sin(angle) * 4;
-          const z = Math.cos(angle) * 4;
-          const y = i * -1.8 - 5;
-          return (
-            <ChainBlock
-              key={i}
-              position={[x, y, z]}
-              verse={block.verse}
-              reference={block.reference}
-            />
-          );
-        })}
+      {blocks.map((block, i) => {
+        const angle = i * 0.45;
+        const radius = 6.5;
+        const x = Math.sin(angle) * radius;
+        const z = Math.cos(angle) * radius * 0.7;
+        const y = i * -2.8;
 
-        <OrbitControls enablePan enableZoom enableRotate />
-      </Canvas>
-    </div>
+        return (
+          <ChainBlock
+            key={i}
+            position={[x, y, z]}
+            reference={block.reference}
+            isActive={i === currentIndex}
+          />
+        );
+      })}
+
+      <OrbitControls 
+        ref={controlsRef}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        minDistance={8}
+        maxDistance={40}
+        target={[0, 0, 0]}
+      />
+    </>
   );
-}
+});
+
+const VerseChain3D = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => {
+  return (
+    <Canvas 
+      camera={{ position: [0, 10, 25], fov: 42 }}
+      style={{ background: "#000000" }}
+      gl={{ preserveDrawingBuffer: true, antialias: true }}
+    >
+      <Scene ref={ref} blocks={blocks} currentIndex={currentIndex} />
+    </Canvas>
+  );
+});
+
+export default VerseChain3D;
