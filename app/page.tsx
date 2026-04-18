@@ -11,7 +11,7 @@ export default function Home() {
       <div className="flex-1 relative min-h-[600px]">
         <BibleChain3D />
       </div>
-      <div className="w-full lg:w-96 bg-zinc-950 border-t lg:border-l border-white/10 p-8">
+      <div className="w-full lg:w-96 bg-zinc-950 border-t lg:border-l border-white/10 p-8 overflow-auto">
         <CreateBlockPanel />
       </div>
     </div>
