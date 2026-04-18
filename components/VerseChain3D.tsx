@@ -28,44 +28,61 @@ const ChainBlock = ({ position, reference, isActive }: { position: [number, numb
   );
 };
 
-// KOTOR Light-Side Beam (exactly like the screenshot)
+// KOTOR Light-Side Beam (animated exactly like your screenshot)
 const HolyBeam = () => {
   const groupRef = useRef<THREE.Group>(null!);
   const coreRef = useRef<THREE.Mesh>(null!);
+  const ringRefs = useRef<THREE.Mesh[]>([]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    if (groupRef.current) groupRef.current.rotation.y = t * 0.025;
-    if (coreRef.current) coreRef.current.material.opacity = Math.sin(t * 8) * 0.25 + 0.85;
+
+    // Slow rotation of the whole beam
+    if (groupRef.current) groupRef.current.rotation.y = t * 0.03;
+
+    // Pulse the bright core
+    if (coreRef.current) {
+      coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
+    }
+
+    // Fire the energy rings upward
+    ringRefs.current.forEach((ring) => {
+      if (ring) {
+        ring.position.y += 0.65;
+        if (ring.position.y > 40) ring.position.y = -45;
+        ring.material.opacity = Math.max(0.2, 1 - Math.abs(ring.position.y) / 55);
+      }
+    });
   });
 
   return (
     <group ref={groupRef}>
-      {/* Outer soft cyan glow */}
+      {/* Soft outer glow */}
       <mesh position={[0, -15, 0]}>
-        <cylinderGeometry args={[1.35, 2.0, 95, 64, 1, true]} />
+        <cylinderGeometry args={[1.4, 2.1, 95, 64, 1, true]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Bright pulsing white-blue core */}
+      {/* Bright pulsing core (the "laser" part) */}
       <mesh ref={coreRef} position={[0, -15, 0]}>
-        <cylinderGeometry args={[0.58, 0.78, 95, 64]} />
+        <cylinderGeometry args={[0.6, 0.8, 95, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
 
       {/* Misty glowing base (KOTOR floor effect) */}
-      <mesh position={[0, -32, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[22, 22]} />
-        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.5} />
+      <mesh position={[0, -33, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[24, 24]} />
+        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.55} />
       </mesh>
 
-      {/* Energy rings firing upward */}
+      {/* Energy rings that fire upward */}
       {Array.from({ length: 18 }).map((_, i) => (
         <mesh
           key={i}
-          position={[0, -50 + i * 5.8, 0]}
+          ref={(el) => { if (el) ringRefs.current[i] = el!; }}
+          position={[0, -45 + i * 5.5, 0]}
         >
-          <ringGeometry args={[1.85, 2.45, 64]} />
+          <ringGeometry args={[1.9, 2.5, 64]} />
           <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
@@ -100,7 +117,7 @@ const FloatingParticles = () => {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.065} color="#a5f0ff" transparent opacity={0.6} depthWrite={false} />
+      <pointsMaterial size={0.07} color="#a5f0ff" transparent opacity={0.6} depthWrite={false} />
     </points>
   );
 };
@@ -120,7 +137,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 
   return (
     <>
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={0.5} />
       <directionalLight position={[20, 50, 30]} intensity={2.4} />
       <pointLight position={[0, 20, 0]} intensity={2} color="#a5f0ff" />
 
@@ -128,7 +145,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 
       {blocks.map((block, i) => {
         const angle = i * 0.42;
-        const radius = 10.2; // tight wrap around the beam
+        const radius = 10.2;
         const x = Math.sin(angle) * radius;
         const z = Math.cos(angle) * radius * 0.85;
         const y = i * -2.8;
@@ -137,7 +154,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 
       <FloatingParticles />
 
-      <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={18} maxDistance={70} />
+      <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={16} maxDistance={70} />
     </>
   );
 });
