@@ -5,13 +5,15 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "The Eternal Chain • On-Chain Bible Ledger",
-  description: "Mint unique Bible verses on Solana. Every block is a verse forever.",
+  title: "VerseChain • Bible on Solana",
+  description: "Create eternal blocks. Own a verse. Get rewarded.",
 };
 
 export default function RootLayout({
   children,
-}: { children: React.ReactNode }) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className={inter.className}>{children}</body>
