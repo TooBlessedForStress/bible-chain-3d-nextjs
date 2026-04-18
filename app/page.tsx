@@ -13,8 +13,12 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 export default function Home() {
   const [selectedVersion, setSelectedVersion] = useState<BibleVersion>("KJV");
   const [blocks, setBlocks] = useState<any[]>([
-    { id: 1, reference: "Genesis 1:1", verse: "In the beginning God created the heaven and the earth." },
-  ]);
+  { id: 1, reference: "Genesis 1:1", verse: "In the beginning God created the heaven and the earth." },
+  { id: 2, reference: "John 3:16", verse: "For God so loved the world..." },
+  { id: 3, reference: "Psalm 23:1", verse: "The Lord is my shepherd..." },
+  { id: 4, reference: "Matthew 6:9", verse: "Our Father which art in heaven..." },
+  { id: 5, reference: "Romans 8:28", verse: "And we know that all things work together..." },
+]);
   const [usedIds, setUsedIds] = useState<number[]>([]);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [showUI, setShowUI] = useState(true);
