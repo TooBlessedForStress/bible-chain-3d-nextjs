@@ -3,7 +3,7 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
 import * as THREE from "three";
 
 interface BlockProps {
@@ -33,19 +33,86 @@ const ChainBlock = ({ position, reference, isActive }: BlockProps) => {
         />
       </mesh>
 
-      {/* Reference Text on Block */}
+      {/* Verse Reference Text - No custom font */}
       <Text
-        position={[0, 0, 0.51]}
-        fontSize={0.11}
+        position={[0, 0, 0.52]}
+        fontSize={0.105}
         color="#000000"
         anchorX="center"
         anchorY="middle"
         maxWidth={1.6}
-        font="/fonts/inter.woff" // fallback if needed
+        outlineWidth={0.008}
+        outlineColor="#ffffff"
       >
         {reference}
       </Text>
     </group>
+  );
+};
+
+// Gentle floating particles (prayer/light motes)
+const FloatingParticles = () => {
+  const pointsRef = useRef<THREE.Points>(null!);
+  const particleCount = 800;
+
+  const positions = useMemo(() => {
+    const pos = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      pos[i] = (Math.random() - 0.5) * 40;
+      pos[i + 1] = Math.random() * -70 - 10;
+      pos[i + 2] = (Math.random() - 0.5) * 35;
+    }
+    return pos;
+  }, []);
+
+  useFrame(() => {
+    if (pointsRef.current) {
+      const pos = pointsRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 1; i < pos.length; i += 3) {
+        pos[i] += 0.018;
+        if (pos[i] > 25) pos[i] = -70;
+      }
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.085} color="#ffffff" transparent opacity={0.55} depthWrite={false} />
+    </points>
+  );
+};
+
+// Sparkles around active block
+const SparkleParticles = ({ currentIndex, blocks }: { currentIndex: number; blocks: any[] }) => {
+  const sparkleRef = useRef<THREE.Points>(null!);
+  const count = 65;
+
+  const positions = useMemo(() => new Float32Array(count * 3), []);
+
+  useFrame(() => {
+    if (!blocks[currentIndex] || !sparkleRef.current) return;
+    const blockY = currentIndex * -2.8;
+    const arr = sparkleRef.current.geometry.attributes.position.array as Float32Array;
+
+    for (let i = 0; i < count * 3; i += 3) {
+      arr[i]     = (Math.random() - 0.5) * 4.5;
+      arr[i + 1] = blockY + (Math.random() - 0.5) * 3.5;
+      arr[i + 2] = (Math.random() - 0.5) * 4.5;
+    }
+    sparkleRef.current.geometry.attributes.position.needsUpdate = true;
+  });
+
+  return (
+    <points ref={sparkleRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.14} color="#ffffff" transparent opacity={0.85} depthWrite={false} />
+    </points>
   );
 };
 
@@ -56,7 +123,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
   useImperativeHandle(ref, () => ({
     focusBlock: (index: number) => {
       const targetY = index * -2.8;
-      camera.position.set(0, targetY + 8, 18);
+      camera.position.set(0, targetY + 9, 21);
       if (controlsRef.current) {
         controlsRef.current.target.set(0, targetY, 0);
         controlsRef.current.update();
@@ -64,24 +131,17 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
     }
   }));
 
-  // Auto-focus first block on load
-  useFrame(() => {
-    if (blocks.length > 0 && currentIndex === 0) {
-      camera.position.set(0, 6, 22);
-    }
-  });
-
   return (
     <>
       <ambientLight intensity={0.7} />
-      <directionalLight position={[10, 20, 5]} intensity={1.5} castShadow />
-      <pointLight position={[-15, -10, -10]} intensity={0.6} />
+      <directionalLight position={[12, 25, 12]} intensity={1.5} castShadow />
+      <pointLight position={[-18, -12, -15]} intensity={0.6} />
 
       {blocks.map((block, i) => {
         const angle = i * 0.45;
-        const radius = 6.5;
+        const radius = 6.8;
         const x = Math.sin(angle) * radius;
-        const z = Math.cos(angle) * radius * 0.7;
+        const z = Math.cos(angle) * radius * 0.75;
         const y = i * -2.8;
 
         return (
@@ -94,14 +154,16 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
         );
       })}
 
-      <OrbitControls 
+      <FloatingParticles />
+      <SparkleParticles currentIndex={currentIndex} blocks={blocks} />
+
+      <OrbitControls
         ref={controlsRef}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
-        minDistance={8}
-        maxDistance={40}
-        target={[0, 0, 0]}
+        minDistance={10}
+        maxDistance={45}
       />
     </>
   );
@@ -110,9 +172,9 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 const VerseChain3D = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => {
   return (
     <Canvas 
-      camera={{ position: [0, 10, 25], fov: 42 }}
+      camera={{ position: [0, 14, 27], fov: 40 }}
       style={{ background: "#000000" }}
-      gl={{ preserveDrawingBuffer: true, antialias: true }}
+      gl={{ antialias: true }}
     >
       <Scene ref={ref} blocks={blocks} currentIndex={currentIndex} />
     </Canvas>
