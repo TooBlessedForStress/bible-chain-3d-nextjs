@@ -28,64 +28,48 @@ const ChainBlock = ({ position, reference, isActive }: { position: [number, numb
   );
 };
 
-// Animated Holy Laser Beam (firing upward)
+// KOTOR-style Holy Light Beam
 const HolyBeam = () => {
   const groupRef = useRef<THREE.Group>(null!);
   const coreRef = useRef<THREE.Mesh>(null!);
-  const ringRefs = useRef<THREE.Mesh[]>([]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-
-    // Slow divine rotation
-    if (groupRef.current) groupRef.current.rotation.y = t * 0.04;
-
-    // Pulse the core like a firing laser
-    if (coreRef.current) {
-      coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
-    }
-
-    // Fire energy rings upward
-    ringRefs.current.forEach((ring, i) => {
-      if (ring) {
-        ring.position.y += 0.55;
-        if (ring.position.y > 35) ring.position.y = -40;
-        ring.material.opacity = Math.max(0.1, 1 - Math.abs(ring.position.y) / 50);
-      }
-    });
+    if (groupRef.current) groupRef.current.rotation.y = t * 0.03;
+    if (coreRef.current) coreRef.current.material.opacity = Math.sin(t * 7) * 0.25 + 0.85;
   });
 
   return (
     <group ref={groupRef}>
-      {/* Outer beam */}
-      <mesh position={[0, -10, 0]}>
-        <cylinderGeometry args={[1.4, 2.1, 80, 48, 1, true]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.22} side={THREE.DoubleSide} />
+      {/* Tall glowing column (the main KOTOR beam) */}
+      <mesh position={[0, -12, 0]}>
+        <cylinderGeometry args={[1.1, 1.8, 85, 64, 1, true]} />
+        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Bright pulsing laser core */}
-      <mesh ref={coreRef} position={[0, -10, 0]}>
-        <cylinderGeometry args={[0.7, 0.9, 80, 48]} />
+      {/* Bright white-blue core */}
+      <mesh ref={coreRef} position={[0, -12, 0]}>
+        <cylinderGeometry args={[0.55, 0.75, 85, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
 
+      {/* Misty glowing base (exactly like KOTOR floor glow) */}
+      <mesh position={[0, -28, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[18, 18]} />
+        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.45} />
+      </mesh>
+
       {/* Energy rings firing upward */}
-      {Array.from({ length: 14 }).map((_, i) => (
+      {Array.from({ length: 16 }).map((_, i) => (
         <mesh
           key={i}
-          ref={(el) => { if (el) ringRefs.current[i] = el; }}
-          position={[0, -40 + i * 5.5, 0]}
+          ref={(el) => { if (el) (el as any).userData = { speed: 0.5 + i * 0.05 }; }}
+          position={[0, -45 + i * 6, 0]}
         >
-          <ringGeometry args={[2.0, 2.6, 64]} />
-          <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
+          <ringGeometry args={[1.9, 2.4, 64]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.6} side={THREE.DoubleSide} />
         </mesh>
       ))}
-
-      {/* Outer glow */}
-      <mesh position={[0, -10, 0]}>
-        <cylinderGeometry args={[2.8, 3.2, 80, 48, 1, true]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.08} side={THREE.DoubleSide} />
-      </mesh>
     </group>
   );
 };
@@ -97,7 +81,7 @@ const FloatingParticles = () => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i += 3) {
       pos[i] = (Math.random() - 0.5) * 55;
-      pos[i + 1] = Math.random() * -100 - 20;
+      pos[i + 1] = Math.random() * -110 - 25;
       pos[i + 2] = (Math.random() - 0.5) * 50;
     }
     return pos;
@@ -107,7 +91,7 @@ const FloatingParticles = () => {
     if (pointsRef.current) {
       const pos = pointsRef.current.geometry.attributes.position.array as Float32Array;
       for (let i = 1; i < pos.length; i += 3) pos[i] += 0.028;
-      if (pos[1] > 40) pos[1] = -100;
+      if (pos[1] > 40) pos[1] = -110;
       pointsRef.current.geometry.attributes.position.needsUpdate = true;
     }
   });
@@ -117,7 +101,7 @@ const FloatingParticles = () => {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.07} color="#ffffff" transparent opacity={0.5} depthWrite={false} />
+      <pointsMaterial size={0.07} color="#a5f0ff" transparent opacity={0.55} depthWrite={false} />
     </points>
   );
 };
@@ -129,7 +113,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
   useImperativeHandle(ref, () => ({
     focusBlock: (index: number) => {
       const targetY = index * -2.8;
-      camera.position.set(5, targetY + 12, 26);
+      camera.position.set(5, targetY + 13, 27);
       controlsRef.current?.target.set(0, targetY, 0);
       controlsRef.current?.update();
     }
@@ -137,15 +121,15 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[15, 40, 20]} intensity={2} />
-      <pointLight position={[0, 10, 0]} intensity={1.5} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[15, 45, 25]} intensity={2.2} />
+      <pointLight position={[0, 15, 0]} intensity={1.8} color="#a5f0ff" />
 
       <HolyBeam />
 
       {blocks.map((block, i) => {
         const angle = i * 0.42;
-        const radius = 9.6;
+        const radius = 9.8;
         const x = Math.sin(angle) * radius;
         const z = Math.cos(angle) * radius * 0.85;
         const y = i * -2.8;
@@ -153,13 +137,14 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
       })}
 
       <FloatingParticles />
-      <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={15} maxDistance={60} />
+
+      <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={16} maxDistance={65} />
     </>
   );
 });
 
 const VerseChain3D = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => (
-  <Canvas camera={{ position: [6, 18, 30], fov: 36 }} style={{ background: "#000000" }} gl={{ antialias: true }}>
+  <Canvas camera={{ position: [6, 19, 32], fov: 35 }} style={{ background: "#000000" }} gl={{ antialias: true }}>
     <Scene ref={ref} blocks={blocks} currentIndex={currentIndex} />
   </Canvas>
 ));
