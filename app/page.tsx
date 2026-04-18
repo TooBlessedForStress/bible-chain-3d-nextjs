@@ -46,18 +46,18 @@ export default function Home() {
         <WalletModalProvider>
           <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
 
-            {/* 3D Canvas */}
+            {/* 3D Canvas - lowest layer */}
             <div className="absolute inset-0 z-0">
               <VerseChain3D ref={chainRef} blocks={blocks} currentIndex={currentBlockIndex} />
             </div>
 
-            {/* UI forced on top */}
-            <header className="absolute top-0 left-0 right-0 z-[999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent">
+            {/* UI - extremely high z-index */}
+            <header className="absolute top-0 left-0 right-0 z-[99999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent">
               <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
               <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm" />
             </header>
 
-            <div className="absolute top-28 right-8 z-[999] w-80 bg-black/90 backdrop-blur-2xl border border-white/30 p-8">
+            <div className="absolute top-28 right-8 z-[99999] w-80 bg-black/90 backdrop-blur-2xl border border-white/30 p-8">
               <div className="uppercase text-xs tracking-[3px] text-white/70 mb-6">MINT NEW VERSE BLOCK</div>
               <select value={selectedVersion} onChange={e => setSelectedVersion(e.target.value as BibleVersion)} className="w-full bg-black border border-white/30 text-white py-4 px-5 mb-6">
                 <option value="KJV">King James Version</option>
@@ -69,7 +69,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[999] flex gap-3 overflow-x-auto max-w-[92%] pb-4">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[99999] flex gap-3 overflow-x-auto max-w-[92%] pb-4">
               {blocks.map((block, index) => (
                 <button key={block.id} onClick={() => navigateToBlock(index)} className={`px-7 py-4 text-xs border min-w-[160px] ${index === currentBlockIndex ? "border-white bg-white text-black" : "border-white/30 text-white/70 hover:border-white"}`}>
                   BLOCK {String(index + 1).padStart(2, '0')}<br />
@@ -78,7 +78,7 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[999] text-[10px] text-white/40 tracking-widest">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[99999] text-[10px] text-white/40 tracking-widest">
               ETERNAL ON-CHAIN BIBLE VERSE CHAIN • SOLANA DEVNET
             </div>
           </div>
