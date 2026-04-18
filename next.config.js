@@ -6,8 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Force dynamic rendering to avoid static prerender errors with wallet adapter
+  // Force dynamic rendering to avoid wallet adapter issues
   dynamic: 'force-dynamic',
+  output: 'standalone',
 };
 
 export default nextConfig;
