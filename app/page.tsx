@@ -1,258 +1,135 @@
-// components/VerseChain3D.tsx
+// app/page.tsx
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
-import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
-import * as THREE from "three";
+import { useState, useRef } from "react";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
+import VerseChain3D from "@/components/VerseChain3D";
+import { bibleData, getRandomUnusedVerse, type BibleVersion } from "@/lib/verses";
+import { connection } from "@/lib/solana";
+import "@solana/wallet-adapter-react-ui/styles.css";
 
-interface BlockProps {
-  position: [number, number, number];
-  reference: string;
-  isActive: boolean;
+export default function Home() {
+  const [selectedVersion, setSelectedVersion] = useState<BibleVersion>("KJV");
+  const [blocks, setBlocks] = useState<any[]>([
+    { id: 1, reference: "Genesis 1:1", verse: "In the beginning God created the heaven and the earth." },
+    { id: 2, reference: "John 3:16", verse: "For God so loved the world..." },
+    { id: 3, reference: "Psalm 23:1", verse: "The Lord is my shepherd..." },
+    { id: 4, reference: "Matthew 6:9", verse: "Our Father which art in heaven..." },
+    { id: 5, reference: "Romans 8:28", verse: "And we know that all things work together..." },
+  ]);
+  const [usedIds, setUsedIds] = useState<number[]>([]);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const [showUI, setShowUI] = useState(true);
+
+  const chainRef = useRef<any>(null);
+  const wallets = [new PhantomWalletAdapter()];
+
+  const createNewBlock = () => {
+    const verse = getRandomUnusedVerse(selectedVersion, usedIds);
+    if (!verse) {
+      alert("No more verses left in this version!");
+      return;
+    }
+
+    const newBlock = { 
+      id: Date.now(), 
+      reference: verse.reference, 
+      verse: verse.text 
+    };
+
+    setBlocks((prev) => [...prev, newBlock]);
+    setUsedIds((prev) => [...prev, verse.id]);
+    setCurrentBlockIndex(blocks.length);
+  };
+
+  const navigateToBlock = (index: number) => {
+    setCurrentBlockIndex(index);
+    if (chainRef.current?.focusBlock) {
+      chainRef.current.focusBlock(index);
+    }
+  };
+
+  return (
+    <ConnectionProvider endpoint={connection.rpcEndpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
+
+            {/* Full-screen 3D Chain with Holy Laser Beam */}
+            <div className="absolute inset-0 z-0">
+              <VerseChain3D 
+                ref={chainRef}
+                blocks={blocks} 
+                currentIndex={currentBlockIndex}
+              />
+            </div>
+
+            {/* Overlays */}
+            <header className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent">
+              <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
+              <div className="flex items-center gap-4">
+                <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm hover:bg-white/90" />
+                <button
+                  onClick={() => setShowUI(!showUI)}
+                  className="px-6 py-2.5 border border-white/40 hover:border-white text-xs tracking-widest transition-colors"
+                >
+                  {showUI ? "HIDE UI" : "SHOW UI"}
+                </button>
+              </div>
+            </header>
+
+            {showUI && (
+              <>
+                {/* Create Controls */}
+                <div className="absolute top-28 right-8 z-50 w-80 bg-black/90 backdrop-blur-2xl border border-white/20 p-8">
+                  <div className="uppercase text-xs tracking-[3px] text-white/60 mb-6">MINT NEW VERSE BLOCK</div>
+                  <select
+                    value={selectedVersion}
+                    onChange={(e) => setSelectedVersion(e.target.value as BibleVersion)}
+                    className="w-full bg-black border border-white/30 text-white py-4 px-5 mb-6 focus:border-white"
+                  >
+                    <option value="KJV">King James Version</option>
+                    <option value="ASV">American Standard Version</option>
+                    <option value="WEB">World English Bible</option>
+                  </select>
+                  <button
+                    onClick={createNewBlock}
+                    className="w-full py-4 border border-white text-white hover:bg-white hover:text-black transition-all text-sm tracking-widest"
+                  >
+                    CREATE NEW BLOCK
+                  </button>
+                </div>
+
+                {/* Safe Navigation (with fallback) */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-3 overflow-x-auto max-w-[92%] pb-4">
+                  {(blocks || []).map((block, index) => (
+                    <button
+                      key={block.id}
+                      onClick={() => navigateToBlock(index)}
+                      className={`px-7 py-4 text-xs border min-w-[160px] transition-all ${
+                        index === currentBlockIndex 
+                          ? "border-white bg-white text-black" 
+                          : "border-white/30 text-white/70 hover:border-white"
+                      }`}
+                    >
+                      BLOCK {String(index + 1).padStart(2, '0')}<br />
+                      <span className="opacity-75 font-light">{block.reference}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {showUI && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 text-[10px] text-white/40 tracking-widest">
+                ETERNAL ON-CHAIN BIBLE VERSE CHAIN • SOLANA DEVNET
+              </div>
+            )}
+          </div>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
 }
-
-const ChainBlock = ({ position, reference, isActive }: BlockProps) => {
-  const meshRef = useRef<THREE.Mesh>(null!);
-
-  useFrame((state) => {
-    if (meshRef.current && isActive) {
-      meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.08);
-    }
-  });
-
-  return (
-    <group position={position}>
-      <mesh ref={meshRef} castShadow receiveShadow>
-        <boxGeometry args={[1.9, 1.25, 1.05]} />
-        <meshStandardMaterial 
-          color={isActive ? "#f0f0f0" : "#d0d0d0"} 
-          metalness={0.3}
-          roughness={0.7}
-          emissive={isActive ? "#444444" : "#000000"}
-        />
-      </mesh>
-
-      <Text
-        position={[0, 0, 0.56]}
-        fontSize={0.098}
-        color="#111111"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={1.65}
-        outlineWidth={0.012}
-        outlineColor="#ffffff"
-      >
-        {reference}
-      </Text>
-    </group>
-  );
-};
-
-// Animated Holy Laser Beam (firing upward like a divine laser)
-const HolyBeam = () => {
-  const beamGroup = useRef<THREE.Group>(null!);
-  const coreRef = useRef<THREE.Mesh>(null!);
-  const ringRefs = useRef<THREE.Mesh[]>([]);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-
-    // Pulse the main beam
-    if (coreRef.current) {
-      const pulse = Math.sin(t * 6) * 0.15 + 0.85;
-      coreRef.current.material.opacity = pulse;
-    }
-
-    // Rotate the entire beam slowly
-    if (beamGroup.current) {
-      beamGroup.current.rotation.y = t * 0.03;
-    }
-
-    // Animate energy rings firing upward
-    ringRefs.current.forEach((ring, i) => {
-      if (ring) {
-        ring.position.y += 0.45;
-        if (ring.position.y > 30) ring.position.y = -35;
-        ring.material.opacity = Math.max(0, 1 - Math.abs(ring.position.y) / 40);
-      }
-    });
-  });
-
-  return (
-    <group ref={beamGroup}>
-      {/* Main outer beam */}
-      <mesh position={[0, -8, 0]}>
-        <cylinderGeometry args={[1.4, 2.1, 65, 48, 1, true]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.18} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Bright pulsing core (the "laser" part) */}
-      <mesh ref={coreRef} position={[0, -8, 0]}>
-        <cylinderGeometry args={[0.65, 0.85, 65, 48]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
-      </mesh>
-
-      {/* Energy rings firing upward (laser effect) */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <mesh
-          key={i}
-          ref={(el) => {
-            if (el) ringRefs.current[i] = el;
-          }}
-          position={[0, -35 + i * 6, 0]}
-        >
-          <ringGeometry args={[1.8, 2.3, 64]} />
-          <meshBasicMaterial 
-            color="#ffffff" 
-            transparent 
-            opacity={0.7}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-
-      {/* Very faint outer glow */}
-      <mesh position={[0, -8, 0]}>
-        <cylinderGeometry args={[2.6, 3.0, 65, 48, 1, true]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.06} side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  );
-};
-
-// (FloatingParticles and SparkleParticles stay the same as last version)
-const FloatingParticles = () => {
-  const pointsRef = useRef<THREE.Points>(null!);
-  const particleCount = 1400;
-
-  const positions = useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      pos[i] = (Math.random() - 0.5) * 50;
-      pos[i + 1] = Math.random() * -90 - 20;
-      pos[i + 2] = (Math.random() - 0.5) * 45;
-    }
-    return pos;
-  }, []);
-
-  useFrame(() => {
-    if (pointsRef.current) {
-      const pos = pointsRef.current.geometry.attributes.position.array as Float32Array;
-      for (let i = 1; i < pos.length; i += 3) {
-        pos[i] += 0.025;
-        if (pos[i] > 35) pos[i] = -90;
-      }
-      pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial size={0.065} color="#ffffff" transparent opacity={0.5} depthWrite={false} />
-    </points>
-  );
-};
-
-const SparkleParticles = ({ currentIndex, blocks }: { currentIndex: number; blocks: any[] }) => {
-  const sparkleRef = useRef<THREE.Points>(null!);
-  const count = 90;
-
-  const positions = useMemo(() => new Float32Array(count * 3), []);
-
-  useFrame(() => {
-    if (!blocks[currentIndex] || !sparkleRef.current) return;
-    const blockY = currentIndex * -2.8;
-    const arr = sparkleRef.current.geometry.attributes.position.array as Float32Array;
-
-    for (let i = 0; i < count * 3; i += 3) {
-      arr[i] = (Math.random() - 0.5) * 5.5;
-      arr[i + 1] = blockY + (Math.random() - 0.5) * 4.2;
-      arr[i + 2] = (Math.random() - 0.5) * 5.5;
-    }
-    sparkleRef.current.geometry.attributes.position.needsUpdate = true;
-  });
-
-  return (
-    <points ref={sparkleRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial size={0.15} color="#ffffff" transparent opacity={0.85} depthWrite={false} />
-    </points>
-  );
-};
-
-const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => {
-  const { camera } = useThree();
-  const controlsRef = useRef<any>(null);
-
-  useImperativeHandle(ref, () => ({
-    focusBlock: (index: number) => {
-      const targetY = index * -2.8;
-      camera.position.set(5, targetY + 12, 26);
-      if (controlsRef.current) {
-        controlsRef.current.target.set(0, targetY, 0);
-        controlsRef.current.update();
-      }
-    }
-  }));
-
-  return (
-    <>
-      <ambientLight intensity={0.55} />
-      <directionalLight position={[10, 40, 20]} intensity={1.9} castShadow />
-      <pointLight position={[0, 5, 0]} intensity={1.4} color="#ffffff" />
-
-      {/* The animated laser-like Holy Beam */}
-      <HolyBeam />
-
-      {/* Blockchain helix wrapping tightly around the beam */}
-      {blocks.map((block, i) => {
-        const angle = i * 0.42;
-        const radius = 9.4;
-        const x = Math.sin(angle) * radius;
-        const z = Math.cos(angle) * radius * 0.85;
-        const y = i * -2.8;
-
-        return (
-          <ChainBlock
-            key={i}
-            position={[x, y, z]}
-            reference={block.reference}
-            isActive={i === currentIndex}
-          />
-        );
-      })}
-
-      <FloatingParticles />
-      <SparkleParticles currentIndex={currentIndex} blocks={blocks} />
-
-      <OrbitControls
-        ref={controlsRef}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        minDistance={15}
-        maxDistance={60}
-      />
-    </>
-  );
-});
-
-const VerseChain3D = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentIndex: number }, ref) => {
-  return (
-    <Canvas 
-      camera={{ position: [6, 18, 30], fov: 36 }}
-      style={{ background: "#000000" }}
-      gl={{ antialias: true }}
-    >
-      <Scene ref={ref} blocks={blocks} currentIndex={currentIndex} />
-    </Canvas>
-  );
-});
-
-export default VerseChain3D;
