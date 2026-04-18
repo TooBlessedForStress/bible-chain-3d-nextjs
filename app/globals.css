@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-darkbg text-white font-serif;
-  }
+html, body {
+  background: #000000 !important;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
