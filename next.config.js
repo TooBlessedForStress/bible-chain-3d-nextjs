@@ -6,12 +6,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // This is the key fix for the wallet adapter error
-  experimental: {
-    serverComponentsExternalPackages: ["@solana/web3.js", "@coral-xyz/anchor"],
-  },
-  // Disable static generation for the whole app for now
-  output: 'standalone',
+  // Force dynamic rendering to avoid static prerender errors with wallet adapter
+  dynamic: 'force-dynamic',
 };
 
 export default nextConfig;
