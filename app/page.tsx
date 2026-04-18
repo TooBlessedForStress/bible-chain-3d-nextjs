@@ -20,7 +20,7 @@ export default function Home() {
         <BibleChain3D />
       </div>
 
-      {/* Sidebar - Fixed width on large screens */}
+      {/* Sidebar - Right side on desktop */}
       <div className="w-full lg:w-96 bg-zinc-950 border-t lg:border-l border-white/10 p-8 overflow-auto">
         <CreateBlockPanel />
       </div>
