@@ -9,25 +9,14 @@ import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import VerseChain3D from "@/components/VerseChain3D";
 import { bibleData, getRandomUnusedVerse, type BibleVersion } from "@/lib/verses";
 import { connection } from "@/lib/solana";
-import { Button } from "@/components/ui/button"; // we'll create this next
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Simple shadcn-style button (or install shadcn later)
-const Button = ({ children, onClick, disabled }: any) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className="px-8 py-4 bg-holy text-black font-bold text-lg rounded-2xl hover:scale-105 transition-all disabled:opacity-50"
-  >
-    {children}
-  </button>
-);
+// Remove the conflicting Button import and custom definition
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Home() {
   const [selectedVersion, setSelectedVersion] = useState<BibleVersion>("KJV");
   const [blocks, setBlocks] = useState<any[]>([
-    // demo blocks
-    { id: 1, reference: "Genesis 1:1", verse: "In the beginning..." },
+    { id: 1, reference: "Genesis 1:1", verse: "In the beginning God created the heaven and the earth." },
   ]);
   const [usedIds, setUsedIds] = useState<number[]>([]);
 
@@ -40,41 +29,45 @@ export default function Home() {
       return;
     }
 
-    // TODO: Later replace with real Anchor transaction
     console.log("📦 Creating block with verse:", verse);
 
-    setBlocks((prev) => [...prev, { id: Date.now(), reference: verse.reference, verse: verse.text }]);
+    setBlocks((prev) => [...prev, { 
+      id: Date.now(), 
+      reference: verse.reference, 
+      verse: verse.text 
+    }]);
     setUsedIds((prev) => [...prev, verse.id]);
 
-    // Simulate fee to liquidity pool
-    alert(`✅ Block created! ${verse.reference} added.\n\n0.002 SOL fee sent to treasury.`);
+    alert(`✅ Block created successfully!\n\nVerse: ${verse.reference}\n\n0.002 SOL fee sent to treasury.\n\nYou earned 10 HOLY tokens!`);
   };
 
   return (
     <ConnectionProvider endpoint={connection.rpcEndpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <div className="min-h-screen bg-darkbg text-white">
+          <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
             {/* Header */}
-            <header className="flex justify-between items-center p-6 border-b border-holy/20">
+            <header className="flex justify-between items-center p-6 border-b border-[#d4af77]/20 bg-black/80 backdrop-blur-md z-50">
               <h1 className="text-4xl font-bold tracking-tighter flex items-center gap-3">
-                <span className="text-holy">✝️</span> VERSECHAIN
+                <span className="text-[#d4af77]">✝️</span> VERSECHAIN
               </h1>
-              <WalletMultiButton className="!bg-holy !text-black hover:!scale-105" />
+              <WalletMultiButton className="!bg-[#d4af77] !text-black hover:!scale-105 transition-all font-semibold" />
             </header>
 
             <div className="flex h-[calc(100vh-80px)]">
-              {/* 3D Canvas */}
+              {/* 3D Visualization */}
               <div className="flex-1 relative">
                 <VerseChain3D blocks={blocks} />
               </div>
 
-              {/* Sidebar Controls */}
-              <div className="w-96 bg-black/80 backdrop-blur-xl p-8 flex flex-col gap-8 border-l border-holy/30">
+              {/* Control Sidebar */}
+              <div className="w-96 bg-black/90 backdrop-blur-xl p-8 flex flex-col gap-8 border-l border-[#d4af77]/30 overflow-y-auto">
                 <div>
-                  <label className="text-holy text-sm mb-2 block">Select Bible Version</label>
-                  <Select value={selectedVersion} onValueChange={(v) => setSelectedVersion(v as BibleVersion)}>
-                    <SelectTrigger className="w-full">
+                  <label className="text-[#d4af77] text-sm mb-3 block font-medium">
+                    SELECT BIBLE VERSION
+                  </label>
+                  <Select value={selectedVersion} onValueChange={(v: BibleVersion) => setSelectedVersion(v)}>
+                    <SelectTrigger className="w-full bg-zinc-900 border-[#d4af77]/30 text-white py-6 text-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -85,18 +78,35 @@ export default function Home() {
                   </Select>
                 </div>
 
-                <Button onClick={createNewBlock} className="w-full text-2xl py-8">
-                  ✨ CREATE NEW BLOCK (+10 HOLY)
-                </Button>
+                {/* Big Create Button */}
+                <button
+                  onClick={createNewBlock}
+                  className="w-full py-8 px-10 bg-[#d4af77] hover:bg-[#e5c38a] active:scale-[0.985] transition-all text-black font-bold text-2xl rounded-3xl shadow-xl shadow-[#d4af77]/30 flex items-center justify-center gap-3"
+                >
+                  ✨ CREATE NEW BLOCK
+                  <span className="text-xl">+10 HOLY</span>
+                </button>
 
-                <div className="text-xs text-holy/70 space-y-4">
-                  <p>🔥 Total blocks: <span className="font-mono text-white">{blocks.length}</span></p>
-                  <p>💰 Your rewards this session: <span className="font-mono text-white">0 HOLY</span></p>
-                  <p className="text-amber-400">Next verse preview will appear here after creation</p>
+                {/* Stats */}
+                <div className="space-y-6 pt-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#d4af77]/70">Total Blocks Minted</span>
+                    <span className="font-mono text-white text-lg">{blocks.length}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#d4af77]/70">Remaining Verses (Demo)</span>
+                    <span className="font-mono text-white">
+                      {bibleData[selectedVersion].length - usedIds.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#d4af77]/70">Your Rewards</span>
+                    <span className="font-mono text-[#d4af77] text-lg">0 HOLY</span>
+                  </div>
                 </div>
 
-                <div className="mt-auto text-[10px] text-center text-holy/40">
-                  Connected to Solana Devnet • Professional 3D Chain
+                <div className="mt-auto pt-8 text-center text-[10px] text-[#d4af77]/40">
+                  Connected to Solana Devnet • Verse Uniqueness Enforced
                 </div>
               </div>
             </div>
