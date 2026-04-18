@@ -14,13 +14,13 @@ const CreateBlockPanel = dynamic(
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
-      {/* 3D Scene */}
-      <div className="flex-1 relative min-h-[600px]">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-hidden">
+      {/* Main 3D Scene - Takes most of the screen */}
+      <div className="flex-1 relative min-h-[600px] lg:min-h-screen">
         <BibleChain3D />
       </div>
 
-      {/* Sidebar Panel */}
+      {/* Sidebar - Fixed width on large screens */}
       <div className="w-full lg:w-96 bg-zinc-950 border-t lg:border-l border-white/10 p-8 overflow-auto">
         <CreateBlockPanel />
       </div>
