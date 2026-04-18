@@ -8,14 +8,12 @@ import * as THREE from "three";
 
 const ChainBlock = ({ position, reference, isActive }: { position: [number, number, number]; reference: string; isActive: boolean }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
-
   useFrame((state) => {
     if (meshRef.current && isActive) meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.08);
   });
-
   return (
     <group position={position}>
-      <mesh ref={meshRef} castShadow receiveShadow>
+      <mesh ref={meshRef}>
         <boxGeometry args={[1.95, 1.3, 1.1]} />
         <meshStandardMaterial color={isActive ? "#f0f0f0" : "#d0d0d0"} metalness={0.35} roughness={0.65} />
       </mesh>
@@ -26,7 +24,6 @@ const ChainBlock = ({ position, reference, isActive }: { position: [number, numb
   );
 };
 
-// KOTOR Light-Side Beam - Tall, glowing, pulsing, with firing energy rings
 const HolyBeam = () => {
   const groupRef = useRef<THREE.Group>(null!);
   const coreRef = useRef<THREE.Mesh>(null!);
@@ -34,53 +31,34 @@ const HolyBeam = () => {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-
-    // Slow divine rotation
-    if (groupRef.current) groupRef.current.rotation.y = t * 0.025;
-
-    // Pulse the bright core
-    if (coreRef.current) {
-      coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
-    }
-
-    // Fire energy rings upward
+    if (groupRef.current) groupRef.current.rotation.y = t * 0.03;
+    if (coreRef.current) coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
     ringRefs.current.forEach((ring) => {
       if (ring) {
-        ring.position.y += 0.72;
+        ring.position.y += 0.75;
         if (ring.position.y > 45) ring.position.y = -48;
-        ring.material.opacity = Math.max(0.15, 1 - Math.abs(ring.position.y) / 60);
+        ring.material.opacity = Math.max(0.2, 1 - Math.abs(ring.position.y) / 60);
       }
     });
   });
 
   return (
     <group ref={groupRef}>
-      {/* Soft outer cyan glow */}
       <mesh position={[0, -18, 0]}>
-        <cylinderGeometry args={[1.45, 2.2, 110, 64, 1, true]} />
+        <cylinderGeometry args={[1.4, 2.1, 110, 64, 1, true]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.38} side={THREE.DoubleSide} />
       </mesh>
-
-      {/* Bright pulsing white-blue core */}
       <mesh ref={coreRef} position={[0, -18, 0]}>
-        <cylinderGeometry args={[0.62, 0.82, 110, 64]} />
+        <cylinderGeometry args={[0.6, 0.8, 110, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
-
-      {/* Misty glowing base (KOTOR floor effect) */}
       <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[26, 26]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.6} />
       </mesh>
-
-      {/* Energy rings firing upward */}
       {Array.from({ length: 22 }).map((_, i) => (
-        <mesh
-          key={i}
-          ref={(el) => { if (el) ringRefs.current[i] = el!; }}
-          position={[0, -50 + i * 5.5, 0]}
-        >
-          <ringGeometry args={[2.0, 2.6, 64]} />
+        <mesh key={i} ref={(el) => { if (el) ringRefs.current[i] = el!; }} position={[0, -50 + i * 5.5, 0]}>
+          <ringGeometry args={[1.9, 2.5, 64]} />
           <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
@@ -115,7 +93,7 @@ const FloatingParticles = () => {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.07} color="#a5f0ff" transparent opacity={0.6} depthWrite={false} />
+      <pointsMaterial size={0.065} color="#a5f0ff" transparent opacity={0.6} depthWrite={false} />
     </points>
   );
 };
@@ -135,12 +113,10 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
 
   return (
     <>
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={0.5} />
       <directionalLight position={[20, 55, 30]} intensity={2.5} />
       <pointLight position={[0, 25, 0]} intensity={2.2} color="#a5f0ff" />
-
       <HolyBeam />
-
       {blocks.map((block, i) => {
         const angle = i * 0.42;
         const radius = 10.5;
@@ -149,9 +125,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
         const y = i * -2.8;
         return <ChainBlock key={i} position={[x, y, z]} reference={block.reference} isActive={i === currentIndex} />;
       })}
-
       <FloatingParticles />
-
       <OrbitControls ref={controlsRef} enablePan enableZoom enableRotate minDistance={18} maxDistance={75} />
     </>
   );
