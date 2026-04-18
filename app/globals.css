@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #000000;
-  color: #eeeeee;
+@layer base {
+  body {
+    @apply bg-darkbg text-white font-serif;
+  }
 }
