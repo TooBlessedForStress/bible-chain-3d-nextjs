@@ -51,10 +51,9 @@ export default function Home() {
     <ConnectionProvider endpoint={connection.rpcEndpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          {/* Full viewport container */}
           <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
 
-            {/* 3D Canvas - Full page */}
+            {/* 3D Canvas - Full screen but lower z-index */}
             <div className="absolute inset-0 z-0">
               <VerseChain3D 
                 ref={chainRef}
@@ -63,7 +62,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Overlays on top */}
+            {/* All UI Overlays with higher z-index */}
             <header className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent">
               <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
               <div className="flex items-center gap-4">
@@ -79,7 +78,7 @@ export default function Home() {
 
             {showUI && (
               <>
-                {/* Create Controls */}
+                {/* Create Controls - Top Right */}
                 <div className="absolute top-28 right-8 z-50 w-80 bg-black/90 backdrop-blur-2xl border border-white/20 p-8">
                   <div className="uppercase text-xs tracking-[3px] text-white/60 mb-6">MINT NEW VERSE BLOCK</div>
                   <select
@@ -99,8 +98,8 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Navigation */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-3 overflow-x-auto max-w-[92%]">
+                {/* Block Navigation - Bottom */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-3 overflow-x-auto max-w-[92%] pb-4">
                   {blocks.map((block, index) => (
                     <button
                       key={block.id}
@@ -120,7 +119,7 @@ export default function Home() {
             )}
 
             {showUI && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 text-[10px] text-white/40 tracking-widest">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 text-[10px] text-white/40 tracking-widest">
                 ETERNAL ON-CHAIN BIBLE VERSE CHAIN • SOLANA DEVNET
               </div>
             )}
