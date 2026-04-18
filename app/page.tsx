@@ -7,22 +7,11 @@ const BibleChain3D = dynamic(
   { ssr: false }
 );
 
-const CreateBlockPanel = dynamic(
-  () => import('@/components/CreateBlockPanel'),
-  { ssr: false }
-);
-
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-hidden">
-      {/* 3D Scene - Much larger area */}
-      <div className="flex-1 relative h-screen lg:min-h-screen">
+    <div className="min-h-screen bg-black">
+      <div className="h-screen w-full">
         <BibleChain3D />
-      </div>
-
-      {/* Sidebar - Clean and fixed on the right */}
-      <div className="w-full lg:w-96 bg-zinc-950 border-t lg:border-l border-white/10 p-8 overflow-auto">
-        <CreateBlockPanel />
       </div>
     </div>
   );
