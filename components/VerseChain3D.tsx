@@ -32,10 +32,7 @@ const HolyBeam = () => {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     if (groupRef.current) groupRef.current.rotation.y = t * 0.025;
-    if (coreRef.current) {
-      coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
-      coreRef.current.scale.setScalar(1 + Math.sin(t * 4) * 0.05);
-    }
+    if (coreRef.current) coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
     ringRefs.current.forEach((ring) => {
       if (ring) {
         ring.position.y += 0.82;
@@ -47,28 +44,33 @@ const HolyBeam = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Outer soft glow */}
+      {/* Outer glow */}
       <mesh position={[0, -18, 0]}>
         <cylinderGeometry args={[1.45, 2.2, 110, 64, 1, true]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.38} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Bright pulsing core */}
+      {/* Pulsing core */}
       <mesh ref={coreRef} position={[0, -18, 0]}>
         <cylinderGeometry args={[0.62, 0.82, 110, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
 
-      {/* Misty glowing base */}
+      {/* Misty base */}
       <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[26, 26]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.6} />
       </mesh>
 
-      {/* Energy rings encircling the beam (larger radius) */}
+      {/* Horizontal rings encircling the beam (rotated 90°) */}
       {Array.from({ length: 22 }).map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) ringRefs.current[i] = el!; }} position={[0, -50 + i * 5.5, 0]}>
-          <ringGeometry args={[2.4, 3.0, 64]} />   {/* larger radius so they encircle the beam */}
+        <mesh
+          key={i}
+          ref={(el) => { if (el) ringRefs.current[i] = el!; }}
+          position={[0, -50 + i * 5.5, 0]}
+          rotation={[Math.PI / 2, 0, 0]}   {/* ← This rotates the rings 90° so they encircle the beam */}
+        >
+          <ringGeometry args={[3.1, 3.7, 64]} />   {/* larger radius to clearly go around the beam */}
           <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
