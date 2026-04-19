@@ -46,12 +46,10 @@ export default function Home() {
         <WalletModalProvider>
           <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
 
-            {/* Canvas - clicks pass through to UI */}
             <div className="absolute inset-0 z-0 pointer-events-none">
               <VerseChain3D ref={chainRef} blocks={blocks} currentIndex={currentBlockIndex} />
             </div>
 
-            {/* UI - forced on top */}
             <header className="absolute top-0 left-0 right-0 z-[99999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent pointer-events-auto">
               <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
               <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm" />
