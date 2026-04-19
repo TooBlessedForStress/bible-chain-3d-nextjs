@@ -44,33 +44,26 @@ const HolyBeam = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Outer glow */}
       <mesh position={[0, -18, 0]}>
         <cylinderGeometry args={[1.45, 2.2, 110, 64, 1, true]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.38} side={THREE.DoubleSide} />
       </mesh>
-
-      {/* Pulsing core */}
       <mesh ref={coreRef} position={[0, -18, 0]}>
         <cylinderGeometry args={[0.62, 0.82, 110, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
-
-      {/* Misty base */}
       <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[26, 26]} />
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.6} />
       </mesh>
-
-      {/* Horizontal rings that ENCIRCLE the beam */}
       {Array.from({ length: 22 }).map((_, i) => (
         <mesh
           key={i}
           ref={(el) => { if (el) ringRefs.current[i] = el!; }}
           position={[0, -50 + i * 5.5, 0]}
-          rotation={[Math.PI / 2, 0, 0]}   {/* ← Rotated 90° so they encircle the beam */}
+          rotation={[Math.PI / 2, 0, 0]}   // ← makes rings horizontal and encircle the beam
         >
-          <ringGeometry args={[3.2, 3.8, 64]} />   {/* larger radius = clearly wraps around the beam */}
+          <ringGeometry args={[3.2, 3.8, 64]} />
           <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
