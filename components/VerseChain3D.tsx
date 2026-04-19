@@ -8,16 +8,38 @@ import * as THREE from "three";
 
 const ChainBlock = ({ position, reference, isActive }: { position: [number, number, number]; reference: string; isActive: boolean }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
+
   useFrame((state) => {
-    if (meshRef.current && isActive) meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.08);
+    if (meshRef.current && isActive) {
+      meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.08);
+    }
   });
+
   return (
     <group position={position}>
-      <mesh ref={meshRef}>
+      {/* Parchment / ancient tablet style block */}
+      <mesh ref={meshRef} castShadow receiveShadow>
         <boxGeometry args={[1.95, 1.3, 1.1]} />
-        <meshStandardMaterial color={isActive ? "#f0f0f0" : "#d0d0d0"} metalness={0.35} roughness={0.65} />
+        <meshStandardMaterial 
+          color="#f5f0e8" 
+          metalness={0.15} 
+          roughness={0.85}
+          emissive="#3a2f1f"
+          emissiveIntensity={isActive ? 0.15 : 0}
+        />
       </mesh>
-      <Text position={[0, 0, 0.57]} fontSize={0.1} color="#111111" anchorX="center" anchorY="middle" maxWidth={1.7} outlineWidth={0.01} outlineColor="#ffffff">
+
+      {/* Verse text - elegant and readable */}
+      <Text
+        position={[0, 0, 0.57]}
+        fontSize={0.098}
+        color="#1a140f"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={1.65}
+        outlineWidth={0.008}
+        outlineColor="#f5e8c7"
+      >
         {reference}
       </Text>
     </group>
@@ -44,10 +66,10 @@ const HolyBeam = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Central core */}
+      {/* Central divine core - warm golden-white */}
       <mesh ref={coreRef} position={[0, -18, 0]}>
         <cylinderGeometry args={[0.65, 0.85, 110, 64]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
+        <meshBasicMaterial color="#f5e8c7" transparent opacity={0.95} />
       </mesh>
 
       {/* Hundreds of individual light beams firing upward */}
@@ -63,14 +85,14 @@ const HolyBeam = () => {
           userData={{ speed: 0.6 + Math.random() * 0.8 }}
         >
           <cylinderGeometry args={[0.04, 0.08, 12, 8]} />
-          <meshBasicMaterial color="#a5f0ff" transparent opacity={0.7} />
+          <meshBasicMaterial color="#f5e8c7" transparent opacity={0.7} />
         </mesh>
       ))}
 
-      {/* Misty base */}
+      {/* Misty sacred base */}
       <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[28, 28]} />
-        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.55} />
+        <meshBasicMaterial color="#f5e8c7" transparent opacity={0.55} />
       </mesh>
     </group>
   );
@@ -103,7 +125,7 @@ const FloatingParticles = () => {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.065} color="#a5f0ff" transparent opacity={0.6} depthWrite={false} />
+      <pointsMaterial size={0.065} color="#f5e8c7" transparent opacity={0.6} depthWrite={false} />
     </points>
   );
 };
@@ -125,7 +147,7 @@ const Scene = forwardRef(({ blocks, currentIndex }: { blocks: any[]; currentInde
     <>
       <ambientLight intensity={0.5} />
       <directionalLight position={[20, 55, 30]} intensity={2.5} />
-      <pointLight position={[0, 25, 0]} intensity={2.2} color="#a5f0ff" />
+      <pointLight position={[0, 25, 0]} intensity={2.2} color="#f5e8c7" />
 
       <HolyBeam />
 
