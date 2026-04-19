@@ -27,46 +27,51 @@ const ChainBlock = ({ position, reference, isActive }: { position: [number, numb
 const HolyBeam = () => {
   const groupRef = useRef<THREE.Group>(null!);
   const coreRef = useRef<THREE.Mesh>(null!);
-  const ringRefs = useRef<THREE.Mesh[]>([]);
+  const rayRefs = useRef<THREE.Mesh[]>([]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     if (groupRef.current) groupRef.current.rotation.y = t * 0.025;
     if (coreRef.current) coreRef.current.material.opacity = Math.sin(t * 8) * 0.3 + 0.85;
-    ringRefs.current.forEach((ring) => {
-      if (ring) {
-        ring.position.y += 0.82;
-        if (ring.position.y > 45) ring.position.y = -48;
-        ring.material.opacity = Math.max(0.2, 1 - Math.abs(ring.position.y) / 60);
+    rayRefs.current.forEach((ray) => {
+      if (ray) {
+        ray.position.y += ray.userData.speed || 0.8;
+        if (ray.position.y > 50) ray.position.y = -50;
+        ray.material.opacity = Math.max(0.15, 1 - Math.abs(ray.position.y) / 70);
       }
     });
   });
 
   return (
     <group ref={groupRef}>
-      <mesh position={[0, -18, 0]}>
-        <cylinderGeometry args={[1.45, 2.2, 110, 64, 1, true]} />
-        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.38} side={THREE.DoubleSide} />
-      </mesh>
+      {/* Central core */}
       <mesh ref={coreRef} position={[0, -18, 0]}>
-        <cylinderGeometry args={[0.62, 0.82, 110, 64]} />
+        <cylinderGeometry args={[0.65, 0.85, 110, 64]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.95} />
       </mesh>
-      <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[26, 26]} />
-        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.6} />
-      </mesh>
-      {Array.from({ length: 22 }).map((_, i) => (
+
+      {/* Hundreds of individual light beams firing upward */}
+      {Array.from({ length: 120 }).map((_, i) => (
         <mesh
           key={i}
-          ref={(el) => { if (el) ringRefs.current[i] = el!; }}
-          position={[0, -50 + i * 5.5, 0]}
-          rotation={[Math.PI / 2, 0, 0]}   // ← makes rings horizontal and encircle the beam
+          ref={(el) => { if (el) rayRefs.current[i] = el!; }}
+          position={[
+            (Math.random() - 0.5) * 4,
+            -50 + i * 0.9,
+            (Math.random() - 0.5) * 4
+          ]}
+          userData={{ speed: 0.6 + Math.random() * 0.8 }}
         >
-          <ringGeometry args={[3.2, 3.8, 64]} />
-          <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
+          <cylinderGeometry args={[0.04, 0.08, 12, 8]} />
+          <meshBasicMaterial color="#a5f0ff" transparent opacity={0.7} />
         </mesh>
       ))}
+
+      {/* Misty base */}
+      <mesh position={[0, -37, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[28, 28]} />
+        <meshBasicMaterial color="#a5f0ff" transparent opacity={0.55} />
+      </mesh>
     </group>
   );
 };
