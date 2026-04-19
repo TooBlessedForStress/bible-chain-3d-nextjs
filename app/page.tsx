@@ -21,12 +21,12 @@ export default function Home() {
     { id: 6, reference: "Philippians 4:13" },
   ]);
   const [usedIds, setUsedIds] = useState<number[]>([]);
-  const [currentBlockIndex, setCurrentBlockIndex] = useState(blocks.length - 1); // start on latest block
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(blocks.length - 1);
 
   const chainRef = useRef<any>(null);
   const wallets = [new PhantomWalletAdapter()];
 
-  // Auto-focus on the latest block when the page first loads
+  // Auto-center camera on the focused block (initial load + changes)
   useEffect(() => {
     if (chainRef.current?.focusBlock) {
       chainRef.current.focusBlock(currentBlockIndex);
@@ -39,14 +39,12 @@ export default function Home() {
     const newBlock = { id: Date.now(), reference: verse.reference };
     setBlocks(prev => [...prev, newBlock]);
     setUsedIds(prev => [...prev, verse.id]);
-    setCurrentBlockIndex(blocks.length); // focus on the brand-new block
+    setCurrentBlockIndex(blocks.length); // focus new block
   };
 
   const navigateToBlock = (index: number) => {
     setCurrentBlockIndex(index);
-    if (chainRef.current?.focusBlock) {
-      chainRef.current.focusBlock(index);
-    }
+    if (chainRef.current?.focusBlock) chainRef.current.focusBlock(index);
   };
 
   return (
@@ -55,12 +53,12 @@ export default function Home() {
         <WalletModalProvider>
           <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
 
-            {/* 3D Canvas */}
+            {/* Canvas - clicks pass through to UI */}
             <div className="absolute inset-0 z-0 pointer-events-none">
               <VerseChain3D ref={chainRef} blocks={blocks} currentIndex={currentBlockIndex} />
             </div>
 
-            {/* UI */}
+            {/* UI overlaid on top */}
             <header className="absolute top-0 left-0 right-0 z-[99999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent pointer-events-auto">
               <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
               <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm" />
@@ -78,7 +76,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Navigation buttons */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[99999] flex gap-3 overflow-x-auto max-w-[92%] pb-4 pointer-events-auto">
               {blocks.map((block, index) => (
                 <button 
