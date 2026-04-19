@@ -62,15 +62,15 @@ const HolyBeam = () => {
         <meshBasicMaterial color="#a5f0ff" transparent opacity={0.6} />
       </mesh>
 
-      {/* Horizontal rings encircling the beam (rotated 90°) */}
+      {/* Horizontal rings that ENCIRCLE the beam */}
       {Array.from({ length: 22 }).map((_, i) => (
         <mesh
           key={i}
           ref={(el) => { if (el) ringRefs.current[i] = el!; }}
           position={[0, -50 + i * 5.5, 0]}
-          rotation={[Math.PI / 2, 0, 0]}   {/* ← This rotates the rings 90° so they encircle the beam */}
+          rotation={[Math.PI / 2, 0, 0]}   {/* ← Rotated 90° so they encircle the beam */}
         >
-          <ringGeometry args={[3.1, 3.7, 64]} />   {/* larger radius to clearly go around the beam */}
+          <ringGeometry args={[3.2, 3.8, 64]} />   {/* larger radius = clearly wraps around the beam */}
           <meshBasicMaterial color="#ffffff" transparent side={THREE.DoubleSide} />
         </mesh>
       ))}
