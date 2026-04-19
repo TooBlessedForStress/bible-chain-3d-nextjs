@@ -26,7 +26,6 @@ export default function Home() {
   const chainRef = useRef<any>(null);
   const wallets = [new PhantomWalletAdapter()];
 
-  // Auto-center camera on the focused block (initial load + changes)
   useEffect(() => {
     if (chainRef.current?.focusBlock) {
       chainRef.current.focusBlock(currentBlockIndex);
@@ -39,7 +38,7 @@ export default function Home() {
     const newBlock = { id: Date.now(), reference: verse.reference };
     setBlocks(prev => [...prev, newBlock]);
     setUsedIds(prev => [...prev, verse.id]);
-    setCurrentBlockIndex(blocks.length); // focus new block
+    setCurrentBlockIndex(blocks.length);
   };
 
   const navigateToBlock = (index: number) => {
@@ -51,48 +50,68 @@ export default function Home() {
     <ConnectionProvider endpoint={connection.rpcEndpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
+          <div className="fixed inset-0 h-screen w-screen bg-[#000000] overflow-hidden">
 
-            {/* Canvas - clicks pass through to UI */}
+            {/* 3D Canvas - full background */}
             <div className="absolute inset-0 z-0 pointer-events-none">
               <VerseChain3D ref={chainRef} blocks={blocks} currentIndex={currentBlockIndex} />
             </div>
 
-            {/* UI overlaid on top */}
-            <header className="absolute top-0 left-0 right-0 z-[99999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent pointer-events-auto">
-              <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
-              <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm" />
-            </header>
+            {/* Overlaid content - styled like your Bible search page */}
+            <div className="absolute inset-0 z-10 flex flex-col pointer-events-none">
+              {/* Header / Title */}
+              <div className="px-8 pt-8 pb-6 text-center">
+                <h1 className="bible-search-title">
+                  Live Bible Chain 3D
+                </h1>
+              </div>
 
-            <div className="absolute top-28 right-8 z-[99999] w-80 bg-black/90 backdrop-blur-2xl border border-white/30 p-8 pointer-events-auto">
-              <div className="uppercase text-xs tracking-[3px] text-white/70 mb-6">MINT NEW VERSE BLOCK</div>
-              <select value={selectedVersion} onChange={e => setSelectedVersion(e.target.value as BibleVersion)} className="w-full bg-black border border-white/30 text-white py-4 px-5 mb-6">
-                <option value="KJV">King James Version</option>
-                <option value="ASV">American Standard Version</option>
-                <option value="WEB">World English Bible</option>
-              </select>
-              <button onClick={createNewBlock} className="w-full py-4 border border-white text-white hover:bg-white hover:text-black text-sm tracking-widest">
-                CREATE NEW BLOCK
-              </button>
-            </div>
+              {/* Controls */}
+              <div className="flex-1 flex justify-end items-start px-8 pt-4 pointer-events-auto">
+                <div className="w-80 bg-[#0a0a0a] border border-[#2a2a2a] rounded-3xl p-8 shadow-2xl">
+                  <div className="uppercase text-xs tracking-[3px] text-[#e5e7eb] mb-6">MINT NEW VERSE BLOCK</div>
+                  
+                  <select
+                    value={selectedVersion}
+                    onChange={(e) => setSelectedVersion(e.target.value as BibleVersion)}
+                    className="w-full bg-[#111111] border border-[#2a2a2a] text-white py-4 px-5 mb-6 rounded-2xl focus:border-[#4a4a4a] focus:outline-none"
+                  >
+                    <option value="KJV">King James Version</option>
+                    <option value="ASV">American Standard Version</option>
+                    <option value="WEB">World English Bible</option>
+                  </select>
 
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[99999] flex gap-3 overflow-x-auto max-w-[92%] pb-4 pointer-events-auto">
-              {blocks.map((block, index) => (
-                <button 
-                  key={block.id} 
-                  onClick={() => navigateToBlock(index)} 
-                  className={`px-7 py-4 text-xs border min-w-[160px] transition-all ${
-                    index === currentBlockIndex ? "border-white bg-white text-black" : "border-white/30 text-white/70 hover:border-white"
-                  }`}
-                >
-                  BLOCK {String(index + 1).padStart(2, '0')}<br />
-                  <span className="opacity-75">{block.reference}</span>
-                </button>
-              ))}
-            </div>
+                  <button
+                    onClick={createNewBlock}
+                    className="search-btn w-full"
+                  >
+                    CREATE NEW BLOCK
+                  </button>
+                </div>
+              </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[99999] text-[10px] text-white/40 tracking-widest">
-              ETERNAL ON-CHAIN BIBLE VERSE CHAIN • SOLANA DEVNET
+              {/* Navigation */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex gap-3 overflow-x-auto max-w-[92%] pb-4 pointer-events-auto">
+                {blocks.map((block, index) => (
+                  <button
+                    key={block.id}
+                    onClick={() => navigateToBlock(index)}
+                    className={`px-7 py-4 text-xs border min-w-[160px] transition-all ${
+                      index === currentBlockIndex
+                        ? "border-white bg-white text-black"
+                        : "border-[#2a2a2a] text-white/70 hover:border-[#4a4a4a]"
+                    }`}
+                  >
+                    BLOCK {String(index + 1).padStart(2, '0')}<br />
+                    <span className="opacity-75">{block.reference}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Footer note */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-[10px] text-[#888888] tracking-widest">
+                ETERNAL ON-CHAIN BIBLE VERSE CHAIN • SOLANA DEVNET
+              </div>
             </div>
           </div>
         </WalletModalProvider>
