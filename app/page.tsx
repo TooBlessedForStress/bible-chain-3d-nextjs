@@ -1,7 +1,7 @@
 // app/page.tsx
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
@@ -21,10 +21,17 @@ export default function Home() {
     { id: 6, reference: "Philippians 4:13" },
   ]);
   const [usedIds, setUsedIds] = useState<number[]>([]);
-  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(blocks.length - 1); // start on latest block
 
   const chainRef = useRef<any>(null);
   const wallets = [new PhantomWalletAdapter()];
+
+  // Auto-focus on the latest block when the page first loads
+  useEffect(() => {
+    if (chainRef.current?.focusBlock) {
+      chainRef.current.focusBlock(currentBlockIndex);
+    }
+  }, [currentBlockIndex]);
 
   const createNewBlock = () => {
     const verse = getRandomUnusedVerse(selectedVersion, usedIds);
@@ -32,12 +39,14 @@ export default function Home() {
     const newBlock = { id: Date.now(), reference: verse.reference };
     setBlocks(prev => [...prev, newBlock]);
     setUsedIds(prev => [...prev, verse.id]);
-    setCurrentBlockIndex(blocks.length);
+    setCurrentBlockIndex(blocks.length); // focus on the brand-new block
   };
 
   const navigateToBlock = (index: number) => {
     setCurrentBlockIndex(index);
-    chainRef.current?.focusBlock(index);
+    if (chainRef.current?.focusBlock) {
+      chainRef.current.focusBlock(index);
+    }
   };
 
   return (
@@ -46,10 +55,12 @@ export default function Home() {
         <WalletModalProvider>
           <div className="fixed inset-0 h-screen w-screen bg-black overflow-hidden">
 
+            {/* 3D Canvas */}
             <div className="absolute inset-0 z-0 pointer-events-none">
               <VerseChain3D ref={chainRef} blocks={blocks} currentIndex={currentBlockIndex} />
             </div>
 
+            {/* UI */}
             <header className="absolute top-0 left-0 right-0 z-[99999] flex justify-between items-center px-8 py-6 bg-gradient-to-b from-black/90 to-transparent pointer-events-auto">
               <div className="text-3xl tracking-[6px] font-light text-white">VERSECHAIN</div>
               <WalletMultiButton className="!bg-white !text-black px-6 py-2.5 text-sm" />
@@ -67,9 +78,16 @@ export default function Home() {
               </button>
             </div>
 
+            {/* Navigation buttons */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[99999] flex gap-3 overflow-x-auto max-w-[92%] pb-4 pointer-events-auto">
               {blocks.map((block, index) => (
-                <button key={block.id} onClick={() => navigateToBlock(index)} className={`px-7 py-4 text-xs border min-w-[160px] ${index === currentBlockIndex ? "border-white bg-white text-black" : "border-white/30 text-white/70 hover:border-white"}`}>
+                <button 
+                  key={block.id} 
+                  onClick={() => navigateToBlock(index)} 
+                  className={`px-7 py-4 text-xs border min-w-[160px] transition-all ${
+                    index === currentBlockIndex ? "border-white bg-white text-black" : "border-white/30 text-white/70 hover:border-white"
+                  }`}
+                >
                   BLOCK {String(index + 1).padStart(2, '0')}<br />
                   <span className="opacity-75">{block.reference}</span>
                 </button>
